@@ -1,0 +1,65 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: create-rust-service
+  title: Serviço Base em Rust
+  description: Template para criar serviços em Rust, integrado ao pipeline existente.
+  tags:
+    - rust
+    - service
+spec:
+  owner: devops-team
+  type: service
+  parameters:
+    - title: Configurações do Projeto
+      required:
+        - projectName
+        - repoVisibility
+      properties:
+        projectName:
+          title: Nome do Projeto
+          type: string
+          description: Nome do repositório ou serviço.
+        repoVisibility:
+          title: Visibilidade do Repositório
+          type: string
+          enum:
+            - public
+            - private
+          description: Defina a visibilidade do repositório GitHub.
+  steps:
+    - id: fetch-template
+      name: Buscar Template Base
+      action: fetch:template
+      input:
+        url: https://github.com/seu-usuario/backstage-rust-template/blob/main/rust-base
+        targetPath: .
+    - id: process-template
+      name: Processar Template
+      action: scaffolder:template
+    - id: run-validation
+      name: Validar Configuração Inicial
+      action: run:command
+      input:
+        workingDirectory: .
+        command: |
+          cargo build && cargo test
+    - id: publish-to-repo
+      name: Publicar no GitHub
+      action: publish:github
+      input:
+        repoUrl: github.com/{{ parameters.owner }}/{{ parameters.projectName }}
+        repoVisibility: {{ parameters.repoVisibility }}
+    - id: register-in-catalog
+      name: Registrar no Catálogo
+      action: catalog:register
+      input:
+        location:
+          type: url
+          target: https://github.com/{{ parameters.owner }}/{{ parameters.projectName }}/blob/main/catalog-info.yaml
+  output:
+    links:
+      - title: Repositório do Projeto
+        url: https://github.com/{{ parameters.owner }}/{{ parameters.projectName }}
+      - title: Catálogo Backstage
+        url: /catalog/default/component/{{ parameters.projectName }}

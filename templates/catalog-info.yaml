@@ -1,0 +1,8 @@
+apiVersion: backstage.io/v1alpha1
+kind: Location
+metadata:
+  name: rust-templates
+  description: Templates para criação de serviços em Rust.
+spec:
+  targets:
+    - ./rust-template.yaml
