@@ -49,7 +49,7 @@ spec:
       action: publish:github
       input:
         repoUrl: github.com/{{ parameters.owner }}/{{ parameters.projectName }}
-        repoVisibility: {{ parameters.repoVisibility }}
+        repoVisibility: ${{ parameters.repoVisibility }}
     - id: register-in-catalog
       name: Registrar no Catálogo
       action: catalog:register
