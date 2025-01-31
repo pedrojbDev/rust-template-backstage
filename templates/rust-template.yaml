@@ -1,65 +1,49 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: create-rust-service
-  title: Serviço Base em Rust
-  description: Template para criar serviços em Rust, integrado ao pipeline existente.
-  tags:
-    - rust
-    - service
+  name: simple-rust-template
+  title: Simple Rust Template
+  description: Creates a GitHub repository from a Rust service template.
 spec:
-  owner: devops-team
+  owner: user:guest
   type: service
+
   parameters:
-    - title: Configurações do Projeto
+    - title: Repository Information
       required:
-        - projectName
-        - repoVisibility
+        - name
+        - repoUrl
       properties:
-        projectName:
-          title: Nome do Projeto
+        name:
+          title: Project Name
           type: string
-          description: Nome do repositório ou serviço.
-        repoVisibility:
-          title: Visibilidade do Repositório
+          description: Name of the new repository.
+        repoUrl:
+          title: Repository Location
           type: string
-          enum:
-            - public
-            - private
-          description: Defina a visibilidade do repositório GitHub.
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
   steps:
     - id: fetch-template
-      name: Buscar Template Base
+      name: Fetch Go Template
       action: fetch:template
       input:
-        url: https://github.com/seu-usuario/backstage-rust-template/blob/main/rust-base
-        targetPath: .
-    - id: process-template
-      name: Processar Template
-      action: scaffolder:template
-    - id: run-validation
-      name: Validar Configuração Inicial
-      action: run:command
-      input:
-        workingDirectory: .
-        command: |
-          cargo build && cargo test
-    - id: publish-to-repo
-      name: Publicar no GitHub
+        url: https://github.com/pedrojbDev/rust-template-backstage/tree/main/rust-base
+        values:
+          name: ${{ parameters.name }}
+
+    - id: publish
+      name: Publish to GitHub
       action: publish:github
       input:
-        repoUrl: github.com/{{ parameters.owner }}/{{ parameters.projectName }}
-        repoVisibility: ${{ parameters.repoVisibility }}
-    - id: register-in-catalog
-      name: Registrar no Catálogo
-      action: catalog:register
-      input:
-        location:
-          type: url
-          target: https://github.com/{{ parameters.owner }}/{{ parameters.projectName }}/blob/main/catalog-info.yaml
+        allowedHosts: ['github.com']
+        description: "Generated Go service for ${{ parameters.name }}"
+        repoUrl: ${{ parameters.repoUrl }}
+
   output:
     links:
-      - title: Repositório do Projeto
-        url: https://github.com/{{ parameters.owner }}/{{ parameters.projectName }}
-      - title: Catálogo Backstage
-        url: /catalog/default/component/{{ parameters.projectName }}
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
